@@ -129,3 +129,5 @@ Then
 make [flash]
 ```
 
+See the `examples` directory for more information.
+
