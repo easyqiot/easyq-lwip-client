@@ -1,14 +1,3 @@
-# easyq-lwip-client
-
-C Implementation of EasyQ client using LWIP library, suitable for esp8266 module
-
-## How to use
-
-First, install the (esp-open-rtos)[https://github.com/SuperHouse/esp-open-rtos]
-
-The include the headers:
-
-```C
 
 /* Very basic example that just demonstrates we can run at all!
  */
@@ -21,7 +10,7 @@ The include the headers:
 #include "easyq_config.h"
 
 #include "easyq.h"
-#include "common.h" // wait_for_wifi_connection() and delay()
+#include "common.h"
 
 
 #define STATUS_QUEUE "status"
@@ -37,7 +26,6 @@ void sender(void* args) {
     Queue * queue = Queue_new(STATUS_QUEUE);
     while (1) {
         delay(1000);
-
     	// Wait for wifi conection
         wait_for_wifi_connection();
         
@@ -106,26 +94,4 @@ void user_init(void)
     xTaskCreate(sender, "sender", 512, NULL, 2, NULL);
     xTaskCreate(listener, "listener", 384, NULL, 2, NULL);
 }
-
-```
-
-And include this in your projects make file:
-
-```make
-PROGRAM = simple
-EXTRA_COMPONENTS = path/to/easyq-lwip-client/
-include path/to/esp-open-rtos/common.mk
-```
-
-Export path to SDK and output bin dir.
-```bash
-export SDK_PATH=path/to/esp-open-rtos
-export BIN_PATH=path/to/out/binaries
-```
-
-Then
-
-```bash
-make [flash]
-```
 
