@@ -61,6 +61,7 @@ void sender(void* args) {
 void listener(void* args) {
     err_t err;
     char * buff;
+    char *queue_name;
     size_t buff_len;
     Queue * queue = Queue_new(COMMAND_QUEUE);
     while (1) {
@@ -74,7 +75,7 @@ void listener(void* args) {
             continue;
         }
         while(1) {
-            err = easyq_read(eq, &buff, &buff_len);
+            err = easyq_read_message(eq, &buff, &queue_name, &buff_len);
             if (err != ERR_OK) {
                 printf("Error reading from EasyQ");
                 continue;
@@ -82,7 +83,7 @@ void listener(void* args) {
             if (buff_len <= 0) {
                 continue;
             }
-            printf("--MESSAGE--: %s\n", buff);
+            printf("MESSAGE: %s FROM QUEUE: %s LEN: %d\n", buff, queue_name, buff_len);
         }
     }
 }

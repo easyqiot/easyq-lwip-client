@@ -35,7 +35,6 @@ err_t easyq_connect(EQSession * s) {
     freeaddrinfo(remote_addr);
 
     // Connected
-
     /*
 	int timeout=400;
 	err = lwip_setsockopt(s->socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(int));
@@ -170,6 +169,35 @@ err_t easyq_pull(EQSession * session, Queue * queue) {
     char line[14 + queue->len];
     size = sprintf(line, "PULL FROM %s;\n", queue->name);
     return easyq_write(session, line, size);
+}
+
+
+err_t easyq_read_message(EQSession * s, char ** msg, char ** queue_name, size_t * len) {
+    err_t err;
+    char * retval;
+   
+    err = easyq_read(s, &retval, len);
+    if (err != ERR_OK) {
+        return err;
+    }
+
+    if (strncmp(retval, "MESSAGE ", 8) != 0) {
+        *msg = retval;
+        return -1;
+    }
+
+    char * queue = strrchr(retval, ' ');
+    if (queue == NULL) {
+        *msg = retval;
+        return -2;
+    }
+    *queue_name = queue + 1;
+    char * end = queue-5;
+    char * start = retval + 8;
+    end[0] = '\0';
+    *len = end - start;  
+    *msg = start;
+    return ERR_OK;
 }
 
 
