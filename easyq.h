@@ -31,7 +31,7 @@ typedef struct EQSession {
 } EQSession;
 
 typedef struct Queue {
-    char * name;
+    const char * name;
     size_t len;
 } Queue;
 
@@ -39,10 +39,12 @@ err_t easyq_init(EQSession ** session);
 void easyq_close(EQSession * session);
 
 err_t easyq_read(EQSession * session, char ** line, size_t * len);
-err_t easyq_write(EQSession * session, char * line, size_t len);
-err_t easyq_push(EQSession * session, Queue * queue, char * msg, size_t len);
+err_t easyq_write(EQSession * session, const char * line, size_t len);
+err_t easyq_push(EQSession * session, Queue * queue, const char * msg, size_t len);
 err_t easyq_pull(EQSession * session, Queue * queue);
 err_t easyq_read_message(EQSession * s, char ** msg, char ** queue_name, size_t * len);
- 
-Queue * Queue_new(char * name);
+
+Queue * Queue_new(const char * name);
+
+err_t easyq_subscribe(const char * queuename);
 

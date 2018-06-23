@@ -51,7 +51,7 @@ err_t easyq_connect(EQSession * s) {
 
 err_t easyq_login(EQSession * s) {
     err_t err;
-    char * login = "LOGIN "EASYQ_LOGIN";\n";
+    const char * login = "LOGIN "EASYQ_LOGIN";\n";
     err = easyq_write(s, login, strlen(login));
     if (err != ERR_OK) {
         return err;
@@ -144,7 +144,7 @@ err_t easyq_read(EQSession * s, char ** line, size_t * len) {
 }
 
 
-err_t easyq_write(EQSession * s, char * line, size_t len) {
+err_t easyq_write(EQSession * s, const char * line, size_t len) {
     err_t err_or_len = lwip_write(s->socket, line, len);
     if (err_or_len < ERR_OK) {
         return err_or_len;
@@ -153,7 +153,7 @@ err_t easyq_write(EQSession * s, char * line, size_t len) {
 }
 
 
-err_t easyq_push(EQSession * s, Queue * queue, char * msg, size_t len) {
+err_t easyq_push(EQSession * s, Queue * queue, const char * msg, size_t len) {
     size_t size;
     if (len == -1){
         len = strlen(msg);
@@ -201,9 +201,13 @@ err_t easyq_read_message(EQSession * s, char ** msg, char ** queue_name, size_t 
 }
 
 
-Queue * Queue_new(char * name) {
+Queue * Queue_new(const char * name) {
     Queue * queue = malloc (sizeof (struct Queue));
     queue->len = strlen(name);
     queue->name = name;
     return queue;
+}
+
+err_t easyq_subscribe(const char * queuename) {
+    return ERR_OK;
 }

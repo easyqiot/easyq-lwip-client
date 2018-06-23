@@ -52,6 +52,8 @@ void listener(void* args) {
     char *queue_name;
     size_t buff_len;
     Queue * queue = Queue_new(COMMAND_QUEUE);
+    Queue * status_queue = Queue_new(STATUS_QUEUE);
+
     while (1) {
         delay(1000);
         if (eq == NULL || !eq->ready) {
@@ -62,6 +64,12 @@ void listener(void* args) {
         if (err != ERR_OK) {
             continue;
         }
+
+        err = easyq_pull(eq, status_queue);
+        if (err != ERR_OK) {
+            continue;
+        }
+
         while(1) {
             err = easyq_read_message(eq, &buff, &queue_name, &buff_len);
             if (err != ERR_OK) {
