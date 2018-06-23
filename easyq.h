@@ -1,6 +1,10 @@
 #include "string.h"
 #include "stdlib.h"
 
+#include "espressif/esp_common.h"
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include "lwip/api.h"
 #include "lwip/ip_addr.h"
 #include "lwip/sockets.h"
@@ -22,6 +26,10 @@
 #define EASYQ_READ_BUFFER_SIZE 1024
 #endif
 
+#ifndef EASYQ_PULL_INTERVAL
+#define EASYQ_PULL_INTERVAL 100
+#endif
+
 
 typedef struct EQSession {
 	char * id;
@@ -33,6 +41,7 @@ typedef struct EQSession {
 typedef struct Queue {
     const char * name;
     size_t len;
+    void (*callback) (const char *);
 } Queue;
 
 err_t easyq_init(EQSession ** session);
@@ -46,5 +55,5 @@ err_t easyq_read_message(EQSession * s, char ** msg, char ** queue_name, size_t 
 
 Queue * Queue_new(const char * name);
 
-err_t easyq_subscribe(const char * queuename);
+err_t easyq_loop(EQSession * session, Queue * queues[], size_t queues_count);
 

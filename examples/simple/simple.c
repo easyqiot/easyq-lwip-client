@@ -19,6 +19,16 @@
 EQSession * eq;
 
 
+void on_command(const char * command) {
+    printf("COMMAND: %s\n", command);
+}
+
+
+void on_status(const char * status) {
+    printf("STATUS: %s\n", status);
+}
+
+
 void sender(void* args) {
     err_t err;
     int c = 0;
@@ -35,6 +45,7 @@ void sender(void* args) {
             printf("Cannot Inititalize the easyq\n");
             continue;
         }
+
         printf("Session ID: %s\n", eq->id);
         while (1) {
             sprintf(buff, "%08d", c);
@@ -48,40 +59,52 @@ void sender(void* args) {
 
 void listener(void* args) {
     err_t err;
-    char * buff;
-    char *queue_name;
-    size_t buff_len;
-    Queue * queue = Queue_new(COMMAND_QUEUE);
+    Queue * command_queue = Queue_new(COMMAND_QUEUE);
     Queue * status_queue = Queue_new(STATUS_QUEUE);
+    
+    command_queue->callback = on_command;
+    status_queue->callback = on_status;
+    Queue * queues[2] = {
+        command_queue,
+        status_queue
+    };
 
     while (1) {
         delay(1000);
         if (eq == NULL || !eq->ready) {
             continue;
         }
-        printf("EQ Ready: %d\n", eq->ready);
-        err = easyq_pull(eq, queue);
-        if (err != ERR_OK) {
-            continue;
-        }
 
-        err = easyq_pull(eq, status_queue);
+        err = easyq_loop(eq, queues, 2);
         if (err != ERR_OK) {
+            printf("Cannot start easyq loop\n");
             continue;
-        }
-
-        while(1) {
-            err = easyq_read_message(eq, &buff, &queue_name, &buff_len);
-            if (err != ERR_OK) {
-                printf("Error reading from EasyQ");
-                continue;
-            }
-            if (buff_len <= 0) {
-                continue;
-            }
-            printf("MESSAGE: %s FROM QUEUE: %s LEN: %d\n", buff, queue_name, buff_len);
         }
     }
+
+//        printf("EQ Ready: %d\n", eq->ready);
+//        err = easyq_pull(eq, queue);
+//        if (err != ERR_OK) {
+//            continue;
+//        }
+//
+//        err = easyq_pull(eq, status_queue);
+//        if (err != ERR_OK) {
+//            continue;
+//        }
+//
+//        while(1) {
+//            err = easyq_read_message(eq, &buff, &queue_name, &buff_len);
+//            if (err != ERR_OK) {
+//                printf("Error reading from EasyQ");
+//                continue;
+//            }
+//            if (buff_len <= 0) {
+//                continue;
+//            }
+//            printf("MESSAGE: %s FROM QUEUE: %s LEN: %d\n", buff, queue_name, buff_len);
+//        }
+ 
 }
 
 

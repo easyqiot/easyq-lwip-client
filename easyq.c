@@ -1,6 +1,7 @@
 
 #include "easyq.h"
 
+
 err_t easyq_connect(EQSession * s) {
     err_t err;
 	const struct addrinfo hints = {
@@ -208,6 +209,44 @@ Queue * Queue_new(const char * name) {
     return queue;
 }
 
-err_t easyq_subscribe(const char * queuename) {
+err_t easyq_loop(EQSession * s, Queue * queues[], size_t queues_count) {
+    err_t err;
+    int i;
+    char * buff;
+    size_t buff_len;
+    char * queue_name;
+    
+    printf("queues count: %d\n", queues_count);
+
+    // Subscribing
+    for (i = 0; i < queues_count; i++) {
+        printf("Subscribing queue: %s\n", queues[i]->name);
+        err = easyq_pull(s, queues[i]);
+        if (err != ERR_OK) {
+            return err;
+        }
+    }
+    
+    while (queues_count) {
+        vTaskDelay(EASYQ_PULL_INTERVAL / portTICK_PERIOD_MS);
+        err = easyq_read_message(s, &buff, &queue_name, &buff_len);
+        if (err != ERR_OK) {
+            printf("Error reading from EasyQ\n");
+            continue;
+        }
+        if (buff_len <= 0) {
+            continue;
+        }
+        for (i = 0; i < queues_count; i++) {
+            if (strcmp(queue_name, queues[i]->name) == 0) {
+                if (queues[i]->callback != NULL) {
+                    queues[i]->callback(buff);
+                }
+                break;
+            }
+        }
+    }
+
     return ERR_OK;
 }
+
