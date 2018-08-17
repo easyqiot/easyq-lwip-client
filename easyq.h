@@ -18,6 +18,10 @@
 #define LWIP_TCPIP_CORE_LOCKING 1
 #define LWIP_SOCKET 1
 
+#ifndef EASYQ_HOST
+#define EASYQ_HOST "192.168.1.2"
+#endif
+
 #ifndef EASYQ_PORT
 #define EASYQ_PORT "1085"
 #endif
@@ -28,6 +32,10 @@
 
 #ifndef EASYQ_PULL_INTERVAL
 #define EASYQ_PULL_INTERVAL 100
+#endif
+
+#ifndef EASYQ_LOGIN
+#define EASYQ_LOGIN "easyq-client1"
 #endif
 
 

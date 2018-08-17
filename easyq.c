@@ -27,7 +27,6 @@ err_t easyq_connect(EQSession * s) {
     }
     
     // Allocated socket
-
     err = connect(s->socket, remote_addr->ai_addr, remote_addr->ai_addrlen);
     if(err != ERR_OK) {
         freeaddrinfo(remote_addr);
@@ -77,9 +76,24 @@ err_t easyq_login(EQSession * s) {
 
 
 void easyq_close(EQSession * s) {
-	lwip_close(s->socket);
-    free(s->readbuffer);
-    free(s->id);
+    s->ready = false;
+    if (s->socket >= 0) {
+	    lwip_close(s->socket);
+        s->socket = -1;
+    }
+
+    if (s == NULL) {
+        return;
+    }
+
+    if (s->readbuffer != NULL) {
+        free(s->readbuffer);
+    }
+    
+    if (s->id != NULL) {
+        free(s->id);
+    }
+
 	free(s);
 }
 
@@ -92,6 +106,7 @@ err_t easyq_init(EQSession ** session_ptr_ptr) {
 		return ERR_MEM;
 	}
     s->ready = false;
+    s->socket = -1;
 
     s->readbuffer = malloc(EASYQ_READ_BUFFER_SIZE);
     if (s->readbuffer == NULL) {
@@ -216,11 +231,8 @@ err_t easyq_loop(EQSession * s, Queue * queues[], size_t queues_count) {
     size_t buff_len;
     char * queue_name;
     
-    printf("queues count: %d\n", queues_count);
-
     // Subscribing
     for (i = 0; i < queues_count; i++) {
-        printf("Subscribing queue: %s\n", queues[i]->name);
         err = easyq_pull(s, queues[i]);
         if (err != ERR_OK) {
             return err;
@@ -229,9 +241,12 @@ err_t easyq_loop(EQSession * s, Queue * queues[], size_t queues_count) {
     
     while (queues_count) {
         vTaskDelay(EASYQ_PULL_INTERVAL / portTICK_PERIOD_MS);
+        if (!s->ready) {
+            vTaskDelay((EASYQ_PULL_INTERVAL*2) / portTICK_PERIOD_MS);
+            continue;
+        }
         err = easyq_read_message(s, &buff, &queue_name, &buff_len);
         if (err != ERR_OK) {
-            printf("Error reading from EasyQ\n");
             continue;
         }
         if (buff_len <= 0) {
